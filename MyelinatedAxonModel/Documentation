@@ -1,0 +1,322 @@
+Documentation
+-------------
+
+See the README.md for installation.
+
+
+Using the GUI
+-------------
+
+After adding the main directory and its subdirectories to the MATLAB path, the GUI can be started with:
+
+>>StartAxonGUI();
+
+The GUI loads default parameters from the paper the model was based on (Richardson, A. G., McIntyre, C. C. & Grill, W. M. Modelling the effects of electric fields on nerve fibres: influence of the myelin sheath. Med. Biol. Eng. Comput. 38, 438–446 (2000)). Many of the parameters can be adjusted by using the edit boxes of the GUI.
+
+
+Running the model
+-----------------
+
+The 'RUN MODEL' button runs the model with the currently loaded parameters. The output of running the model can be altered by using the check boxes in the 'Output' panel (print conduction velocity to the MATLAB command window, plot a graph of the membrane potential in the nodes, or save the output of the model to a .mat file). The behaviour of the output can be changed in the 'Options' window, including:
+
+- the method of calculating conduction speed (which can be assessed in 3 ways: from the action potential peaks, from the max dV/dt or from the time to cross a defined potential)
+- between which nodes the conduction speed is measured
+- which nodes to display (membrane potential traces) can also be changed
+
+If the output of the model is saved, three variables will be saved in a .mat file at the end of the simulation:
+
+MEMBRANE_POTENTIAL  a (TxN)-array, where T is the number of time points simulated and N is the number of node segments in the simulation, giving membrane potential (in mV) of each node segment.
+INTERNODE_LENGTH    (1x(N-1))-array giving the length (in mm) of each of the (N-1) internodes.
+TIME_VECTOR         (1xT)-array, where T is the number of time points simulated, giving the the simulation time (in ms) of each sample point of MEMBRANE_POTENTIAL
+
+If the model output is saved, the conduction velocity can be calculated at a later time by loading these variables and using the 'velocities.m' function (type 'help velocities' in MATLAB for usage).
+
+
+Saving and loading parameters
+-----------------------------
+
+Parameter sets can be saved and loaded using the relevant buttons. Some extra sets of parameters have been provided with the model and are saved in 'SavedParameters/':
+
+Bakiri2011Cerebellum.mat and Bakiri2011CorpusCallosum.mat
+Ford2015GBClat.mat, Ford2015GBCmed.mat and Ford2015SBC.mat
+Carcamo2017CortexAxon.mat, Carcamo2017OpticNerveAxon.mat
+
+These parameter sets can be loaded and run, and should replicate the conduction velocity values published in the relevant papers:
+
+Bakiri, Y., Karadottir, R., Cossell, L. & Attwell, D. Morphological and electrical properties of oligodendrocytes in the white matter of the corpus callosum and cerebellum. J. Physiol. 589, 559–573 (2011)
+
+Ford MC, Alexandrova O, Cossell L, Stange-Marten A, Sinclair J, Kopp-Scheinpflug C, Pecka M, Attwell D, Grothe B. Tuning of ranvier node and internode properties in myelinated axons to adjust action potential timing. Nature Communications 6:8073 (2015)
+
+Arancibia-Carcamo I.L., Ford M.C., Cossell L., Ishida K., Tohyama K., Attwell D. Node of Ranvier length as a potential regulator of myelinated axon conduction speed. eLife (2017)
+
+Note: make sure that the conduction velocities are being measured between the correct nodes. The correct nodes are:
+Bakiri et al. (2011): nodes 6 and 13
+Ford et al. (2015): nodes 70 and 90
+Arancibia et al. (2017): nodes 20 and 30
+
+
+
+Changing parameters
+-------------------
+
+Updating parameters using the edit boxes should be straightforward and self-explanatory.  If any of the edit boxes are updated, the value of the parameter along the entire axon will be modified.  For example, changing the edit box for node specific capacitance to '1.5' (uF/cm2) will update every node along the axon to have that value.
+
+In some cases, changing the value of a parameter will have an effect on other parts of the axon. For example, changing the resting membrane potential will alter the leak conductance at the nodes, and changing the internode diameter will affect the number of myelin lamellae, myelin width and g-ratio (described in relevant sections below). These values will automatically update in the GUI without any other notification.
+
+Some parameters cannot be edited directly, such as the node leak conductance, the myelin width and the number of myelin lamellae.
+
+
+
+Parameters affecting the myelin sheath
+--------------------------------------
+
+If any of internode diameter, g-ratio, myelin wrap periodicity or periaxonal space width are changed, then this will have an effect on the overall geometry of the myelin sheath.
+
+The g-ratio is set initially by the user (the "specified" g-ratio). However, since there have to be an integral number of myelin wraps, the "actual" g-ratio will generally be different to that defined by the user. The GUI remembers the "specified" g-ratio, and will calculate parameters of the myelin sheath such as to get as close as possible to this value. The "actual" g-ratio will be displayed in the GUI.
+
+If the internode diameter is changed, then a new myelin width will be estimated using the "specified" g-ratio and the periaxonal space width, according to:
+
+	myelin width = (internode diameter / "specified" g-ratio) / 2 - periaxonal space - internode diameter / 2
+
+From this information, the number of myelin wraps is calculated according to:
+
+	number of wraps = roundup(myelin width / wrap periodicity)
+
+Since there can only be an integer number of myelin wraps, the "actual" g-ratio and myelin width are re-calculated to ensure all parameters are consistent. Therefore, changing the internode diameter will change the "actual" g-ratio, myelin width and number of myelin lamellae.
+
+If the "specified" g-ratio is changed, then a new myelin width will be estimated using the internode diameter and the periaxonal space width (as equation above). From this information, the number of myelin wraps is calculated using the myelin wrap periodicity. Since there can only be an integer number of myelin wraps, the "actual" g-ratio and myelin width are re-calculated to ensure all parameters are consistent. Therefore, changing the "specified" g-ratio will change the myelin width, number of myelin lamellae and the "actual" g-ratio. Also, since the g-ratio is recalculated, it may automatically adjust to a value close, but different, to the one you entered.
+
+If the myelin wrap periodicity is changed, then this will change the number of myelin lamellae (myelin width / wrap periodicity). Since there can only be an integer number of myelin wraps, the "actual" g-ratio and myelin width are re-calculated to ensure all parameters are consistent. Therefore, changing the wrap periodicity will change the "actual" g-ratio, myelin width and number of myelin lamellae.
+
+If the periaxonal space width is changed, then a new myelin width will be estimated using the "specified" g-ratio, internode diameter and the periaxonal space width. From this information, the number of myelin wraps is calculated using the myelin wrap periodicity. Since there can only be an integer number of myelin wraps, the "actual" g-ratio and myelin width are re-calculated to ensure all parameters are consistent. Therefore, changing the periaxonal space width will change the "actual" g-ratio, myelin width and number of myelin lamellae.
+
+During update of the myelin parameters, the programme also ensures that the number of myelin lamellae along a single internode is constant (e.g. to ensure we do not have N wraps in one segment and N+1 wraps in another segment of the same internode). To do this, it uses the "Myelin update method" pop-up box: if set to "max" it will take the largest value across all segments of an internode, if set to "min" it will take the smallest value.
+
+
+Modifying individual nodes, internodes and internode segments
+-------------------------------------------------------------
+
+Buttons marked '>' will open a table displaying the values of the parameters in individual segments along the axon.  These values can be edited to change the value of a parameter in any desired segment. Currently, only node diameter, node length, internode diameter, internode length, periaxonal space width and active conductances at the node can be modified in this way. The number of lamellae expansion button is useful for checking how many lamellae are wrapped around each internode.
+
+Changing the internode diameter or periaxonal space width in any of the internode segments may update the number of myelin wraps along that entire internode, so you should be careful to check the number of myelin lamellae after updating these parameters to make sure your expectations are matched.
+
+
+Active channels in the nodes
+----------------------------
+
+Hodgkin-Huxley active conductances are present in the nodes and the properties of these channels can be modified by using the 'Active electrical' panel. Active channels can be removed ('Remove' button), or different channels loaded ('Load'). They can also be individually saved once you have modified them.  The model starts with 3 types (the defaults): Fast Na+, Persistent Na+ and Slow K+ (whose properties are described in Richardson et al. 2000).
+
+If any of the properties of an active channel are changed, the leak conductance will be updated accordingly (see 'Leak channels') in order to maintain the specified resting membrane potential.
+
+The kinetic equations of the active channels can be updated using the 'Kinetics' window. In this window, you can alter the number of gates (add and remove gates) and the properties of each of these gates such as:
+
+- the gate power
+- the temperature at which the gates were described
+- the alpha and beta rate equations which describe the opening and closing of the gates
+- the q10 values, which determine how the gates speed up with temperature
+
+More examples of active channels are provided in 'SavedParameters/ActiveChannels/' and can be loaded. These active channels are described in:
+
+Ford MC, Alexandrova O, Cossell L, Stange-Marten A, Sinclair J, Kopp-Scheinpflug C, Pecka M, Attwell D, Grothe B. Tuning of ranvier node and internode properties in myelinated axons to adjust action potential timing. Nature Communications 6:8073 (2015)
+
+The code for generating these active channels (both the default and Ford et al. (2015) channels) is provided in the subdirectory 'SavedParameters/ActiveChannels/Code/'.
+
+
+Leak channels
+-------------
+
+The leak conductance is automatically updated to maintain the user-defined resting membrane potential, and this update occurs if any of the following parameters are modified:
+
+1. resting membrane potential
+2. leak conductance reversal potential
+3. any of the active channel properties
+
+Currently, this behaviour cannot be changed. Therefore, if you need to set a particular specific leak conductance you are advised to adjust the resting membrane potential until you have the desired leak conductance.
+
+
+Caveats
+-------
+
+Note that if you include a periaxonal space around the axon (which affects the conduction speed), it is important to determine how many segments you need to divide the internode into in order to get accurate simulations (increasing the number makes it more accurate, and it will eventually converge on the correct speed, but it will take much longer to run).
+
+Currently, only a single segment per node is simulated. If you require multiple segments per node you should use the model programatically (see below).
+
+
+
+
+
+Using the model programatically
+-------------------------------
+
+To begin with, you must fill all of the fields of the parameter structure describing a myelinated axon.  A template parameter structure can be generated by running, for example:
+
+>>axon = Richardson2000FullAxon();
+
+Alternatively, you can generate a completely empty parameter structure with:
+
+>>axon = GenerateEmptyParameterStructure();
+
+and fill all the fields yourself. When you have filled all of the parameter fields correctly you can run the model as:
+
+>>[membranePotential, internodeLength, t] = Model(axon, filenameString)
+
+And this will return the results of the simulation in `membranePotential' and also save the results to a file named `filenameString'.
+
+More examples of using the model programmatically are provided in the 'Examples/' directory.
+
+
+
+Updating the parameter structure
+--------------------------------
+
+When you update a parameter of the myelinated axon, there may be several dependencies. To make things easier, some parameters can be updated using functions:
+
+1. Number of nodes
+	UpdateNumberOfNodes()
+2. Number of node segments
+	UpdateNumberOfNodeSegments()
+3. Number of internode segments
+	UpdateNumberOfInternodeSegments()
+4. Node diameter
+	UpdateNodeDiameter()
+5. Node length
+	UpdateNodeLength()
+6. Internode diameter
+	UpdateInternodeSegmentDiameter()
+7. Internode length
+	UpdateInternodeLength()
+8. g-ratio
+	UpdateInternodeGRatio()
+9. Myelin lamella periodicity
+	UpdateMyelinLamellaPeriodicity()
+10. Periaxonal space width
+	UpdateInternodePeriaxonalSpaceWidth()
+
+See the help section for each of these functions by running:
+
+>>help FunctionName
+
+
+No need for a function, just change the value:
+
+1. Axonal resistivity, e.g.
+	axon.node.elec.pas.axres.value = 1
+2. Periaxonal resistivity
+	axon.myel.elec.pas.peri.axres.value = 1
+6. Node membrane capacitance
+	axon.node.elec.pas.cap.value = 1
+3. Internode membrane conductance
+	axon.intn.elec.pas.cond.value = 1
+4. Internode membrane capacitance
+	axon.intn.elec.pas.cap.value = 1
+5. Myelin membrane conductance
+	axon.myel.elec.pas.cond.value = 1
+6. Myelin membrane capacitance
+	axon.myel.elec.pas.cap.value = 1
+7. Temperature
+	axon.sim.temp = 20
+8. Stimulation amplitude
+	axon.stim.amp.value = 1
+9. Stimulation duration
+	axon.stim.dur.value = 1
+
+
+No functions exist, but further changes may be required, for:
+
+1. Node active (max) conductance
+	axon.node.elec.act(i).cond.value.vec(:) = x;
+2. Node leak reversal potential
+	axon.node.elec.pas.leak.erev.value.vec(:) = x;
+3. Node active reversal potential
+	axon.node.elec.act(i).erev.value = x;
+4. Node active temperature
+	axon.sim.temp = x;
+5. Node active gating variables, kinetic equations or q10s
+6. Resting membrane potential
+
+All of the above parameters may require an update of the leak conductance (if a particular membrane potential is desired) using:
+
+>>axon = CalculateLeakConductance(axon);
+
+If the units of a parameter are updated, you should also reset the parameter value itself in order to update any dependencies. 
+
+
+Active channels
+---------------
+
+To add active channels to the nodes (there are no active channels under the myelin sheath), you can use the function AddActiveChannels():
+
+>>axon = AddActiveChannels(axon, activeChannel)
+
+where 'activeChannel' is either a structure containing the parameters describing an active channel, or a string pointing to a filename which contains a variable 'activeChannel' which is a structure containing the parameters of an active channel. Example active channels are stored in 'SavedParameters/ActiveChannels/' and code to generate those files in 'SavedParameters/ActiveChannels/Code/'. Note that the alpha and beta rate equations are specified as a string, must contain the letter `V', and must be written such that `V' can take vector values.  This means using the MATLAB element-wise array operators for power (.^), multiplication (.*) and division (./) etc.
+
+The fields of an active channel structure are as written below:
+
+activeChannel.channames
+	A string containing a description of the channel (e.g. 'Fast Na+')
+activeChannel.cond.value.ref
+	A double specifying the maximum conductance of the channel
+activeChannel.cond.value.vec
+	When you add the channel to the axon, this field will be filled
+activeChannel.cond.units
+	Units of the specific conductance (see below for units
+activeChannel.erev.value
+activeChannel.erev.units
+	Equilibrium potential of the channel and units
+activeChannel.gates.temp
+	Temperature at which the kinetics of the channel were described
+activeChannel.gates.number
+	Number of gating variables
+activeChannel.gates.label
+	A cell array of length = number of gating variables, usually with a letter denoting the gate label
+	e.g. in HH sodium conductance this could be {'m', 'h'}. Can be left empty.
+activeChannel.gates.numbereach
+	A double array of length = number of gating variable with the power to which to raise the gating variable
+activeChannel.gates.alpha.q10
+activeChannel.gates.beta.q10
+	q10 value of the gating variable - array of length = number of gating variables.
+activeChannel.gates.alpha.equ
+activeChannel.gates.beta.equ
+	A cell array of length = number of gating variables describing the alpha and beta rate equations of the channels
+
+Active channels will be added into the axon.node.elec.act field of the main parameter structure, such that axon.node.elec.act becomes a structure array (1xN, where N is the number of active channels). In order to remove channels, you can simply remove a particular element in this array (axon.node.elec.act(i) = []) or call the function RemoveActiveChannel().
+
+
+Units
+-----
+
+Most parameters come with an SI unit or derived unit. The units appearing in the simulation are seconds (s), meters (m), amperes (A), volts (V), siemens (S), farads (F), ohms (O), and coulombs (C). 
+
+Units are specified as a cell array in the form:
+
+{(double) number of units,  (string) first unit, ..., (string) last unit, (double) array containing power of each unit}
+
+The string denoting the unit should contain the letter of the unit (see above) and also the factor you want. Acceptable factors are: 
+
+'G' (10^9)
+'M' (10^6)
+'k' (10^3)
+'d' (10^-1)
+'c' (10^-2)
+'m' (10^-3)
+'u' (10^-6)
+'n' (10^-9)
+'p' (10^-12)
+'f' (10^-15)
+
+So for example:
+
+{2, 'mS', 'cm', [1, -2]}
+
+
+
+
+
+
+
+
+
+
+
+
+
